@@ -1,39 +1,26 @@
 # Sistema de Facturación ALQUIPC
 
-## Estándares de Calidad según la norma McCall
+Este es un sistema de facturación para el alquiler de equipos de cómputo portátiles, desarrollado con HTML, CSS, y JavaScript. El sistema calcula el costo de alquiler de equipos de acuerdo con las opciones de alquiler (dentro de la ciudad, fuera de la ciudad, dentro del establecimiento), la cantidad de equipos, los días de alquiler iniciales y los días adicionales.
 
-### 1. Operabilidad
 
-#### Facilidad de uso
-- El sistema ha sido diseñado para ser intuitivo, con una interfaz clara y fácil de usar. Los usuarios pueden fácilmente entender el proceso de alquiler y facturación con los campos de entrada bien definidos.
+## Funcionalidades
 
-#### Eficiencia de uso
-- El sistema responde rápidamente a las interacciones del usuario, gracias al uso de **JavaScript** para manejar los cálculos en el frontend sin necesidad de recargar la página.
+- **Ingreso de datos**: El usuario puede ingresar la cantidad de equipos a alquilar, el tipo de alquiler, los días iniciales de alquiler y los días adicionales.
+- **Cálculo de la factura**: El sistema calcula el total de la factura en función de:
+  - El número de equipos.
+  - El tipo de alquiler (dentro del establecimiento, fuera de la ciudad, dentro del local).
+  - Los días iniciales de alquiler.
+  - Los días adicionales (si aplica).
+- **Aplicación de descuentos e incrementos**: Dependiendo del tipo de alquiler y los días adicionales, se aplican los siguientes:
+  - Descuento del 5% si el alquiler es dentro del establecimiento.
+  - Incremento del 5% si el alquiler es fuera de la ciudad.
+  - Descuento del 2% por cada día adicional de alquiler.
+- **Resultado de la factura**: El sistema muestra un resumen con los detalles del alquiler, los descuentos o incrementos aplicados, y el total a pagar.
 
-#### Facilidad de entrenamiento
-- Con un diseño limpio y un flujo de trabajo simple, los usuarios no requieren entrenamiento extenso para utilizar el sistema.
 
-### 2. Mantenibilidad
 
-#### Facilidad de adaptación
-- El código está estructurado de forma modular, con separaciones claras entre **HTML**, **CSS**, y **JavaScript**, lo que facilita las modificaciones futuras.
+## Estructura del Proyecto
 
-#### Facilidad de corrección
-- El código es limpio, bien documentado, y cada bloque tiene un propósito claro, lo que facilita la corrección de errores.
-
-#### Facilidad de modificación
-- El sistema es flexible para adaptarse a nuevas funcionalidades, como la modificación de descuentos, ajustes de tarifas o el soporte de nuevas opciones de pago.
-
-### 3. Transparencia
-
-#### Completitud
-- El sistema cubre todos los aspectos necesarios de la facturación de alquiler de equipos, incluyendo tipos de alquiler, días iniciales y adicionales, y los cálculos de tarifas con descuentos e incrementos.
-
-#### Consistencia
-- El diseño es coherente en todas las páginas y funcionalidades, con un comportamiento uniforme en toda la aplicación.
-
-#### Rendimiento
-- El sistema es rápido y eficiente, procesando los cálculos de forma eficiente en el frontend, garantizando tiempos de respuesta rápidos.
-
-#### Seguridad
-- Aunque este sistema no maneja datos sensibles de usuarios, se asegura que las entradas del usuario sean validadas para evitar posibles ataques de inyección de código.
+- **index.html**: Contiene la estructura del formulario y la interfaz de usuario.
+- **app.js**: Archivo JavaScript que gestiona la lógica del sistema (validación de datos, cálculos de la factura, visualización de resultados).
+- **README.md**: Documento de documentación de este proyecto.

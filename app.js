@@ -10,7 +10,7 @@ function manejarFormulario(e) {
     }
 }
 
-// datos del formulario
+// Datos del formulario
 function obtenerDatosFormulario() {
     const numEquipos = parseInt(document.getElementById('num-equipos').value);
     const tipoAlquiler = document.getElementById('tipo-alquiler').value;
@@ -25,15 +25,18 @@ function obtenerDatosFormulario() {
     };
 }
 
-// Validar formilario
+
 function validarFormulario(datos) {
+    if (datos.numEquipos < 2) {
+        mostrarError("El número de equipos debe ser al menos 2.");
+        return false;
+    }
     if (!validarEntrada(datos.diasIniciales, "diasIniciales") || !validarEntrada(datos.diasAdicionales, "diasAdicionales")) {
         return false;
     }
     return true;
 }
 
-// validaciones
 function validarEntrada(valor, tipo) {
     if (tipo === "diasIniciales") {
         if (valor < 1) {
@@ -55,7 +58,7 @@ function mostrarError(mensaje) {
     errorDiv.classList.remove('hidden');
 }
 
-// total de la factura
+// Total de la factura
 function calcularTotal(datos) {
     const tarifaPorDia = 35000;
     let incremento = 0;
@@ -69,7 +72,7 @@ function calcularTotal(datos) {
 
     let total = datos.numEquipos * tarifaPorDia * datos.diasIniciales;
 
-    // incremento/descuento
+    // aplicar incremento/descuento
     total += total * incremento;
     total -= total * descuento;
 
@@ -83,16 +86,31 @@ function calcularTotal(datos) {
     return total;
 }
 
+// resultado final
 function mostrarResultado(total, tipoAlquiler, numEquipos, diasIniciales, diasAdicionales) {
     const resultadoDiv = document.getElementById('resultado');
     const detalle = document.getElementById('detalle');
 
-    detalle.innerHTML = `
+    let mensaje = `
         <strong>Tipo de Alquiler:</strong> ${tipoAlquiler}<br>
         <strong>Cantidad de equipos:</strong> ${numEquipos}<br>
         <strong>Días iniciales:</strong> ${diasIniciales}<br>
         <strong>Días adicionales:</strong> ${diasAdicionales}<br>
-        <strong>Total a Pagar:</strong> $${total.toFixed(2)}
     `;
+
+    // detalles de incrementos/descuentos
+    if (tipoAlquiler === 'fuera') {
+        mensaje += `<strong>Incremento por fuera de la ciudad:</strong> +$${(total * 0.05).toFixed(2)}<br>`;
+    } else if (tipoAlquiler === 'dentro') {
+        mensaje += `<strong>Descuento por dentro del establecimiento:</strong> -$${(total * 0.05).toFixed(2)}<br>`;
+    }
+
+    if (diasAdicionales > 0) {
+        mensaje += `<strong>Total por días adicionales:</strong> $${(total - total * 0.02).toFixed(2)}<br>`;
+    }
+
+    mensaje += `<strong>Total a Pagar:</strong> $${total.toFixed(2)}`;
+
+    detalle.innerHTML = mensaje;
     resultadoDiv.classList.remove('hidden');
 }
