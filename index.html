@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Facturación ALQUIPC</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-900 text-white font-sans">
+
+    <header class="bg-blue-800 text-white text-center py-6 shadow-lg">
+        <h1 class="text-3xl font-bold">Sistema de Facturación ALQUIPC</h1>
+        <p class="text-lg">Alquiler de equipos de cómputo portátiles.</p>
+    </header>
+
+    <main class="max-w-4xl mx-auto mt-8 p-6 bg-gray-800 shadow-lg rounded-lg">
+        <!-- Área para mostrar errores -->
+        <div id="error-mensaje" class="hidden text-red-500 mb-4 font-medium"></div>
+
+        <form id="factura-form">
+            <div class="mb-6">
+                <label for="num-equipos" class="block text-lg font-medium text-gray-300">Cantidad de equipos a
+                    alquilar:</label>
+                <input type="number" id="num-equipos" min="2" required
+                    class="w-full p-3 mt-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm">
+            </div>
+
+            <div class="mb-6">
+                <label for="tipo-alquiler" class="block text-lg font-medium text-gray-300">Tipo de alquiler:</label>
+                <select id="tipo-alquiler" required
+                    class="w-full p-3 mt-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm">
+                    <option value="dentro">Dentro del establecimiento</option>
+                    <option value="fuera">Fuera de la ciudad</option>
+                    <option value="local">Dentro del local</option>
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label for="dias-iniciales" class="block text-lg font-medium text-gray-300">Número de días iniciales de
+                    alquiler:</label>
+                <input type="number" id="dias-iniciales" min="1" required
+                    class="w-full p-3 mt-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm">
+            </div>
+
+            <div class="mb-6">
+                <label for="dias-adicionales" class="block text-lg font-medium text-gray-300">Número de días adicionales
+                    (si aplica):</label>
+                <input type="number" id="dias-adicionales" min="0"
+                    class="w-full p-3 mt-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm">
+            </div>
+
+            <button type="submit"
+                class="w-full py-3 bg-blue-700 text-white text-lg font-bold rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Calcular Factura
+            </button>
+        </form>
+
+        <div id="resultado" class="mt-8 p-6 bg-gray-700 border border-gray-600 rounded-md shadow-sm hidden">
+            <h2 class="text-xl font-semibold text-gray-300">Resumen de la Factura</h2>
+            <p id="detalle" class="text-gray-100 mt-4"></p>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
