@@ -21,6 +21,17 @@
 
         <form id="factura-form">
             <div class="mb-6">
+                <label for="nombre" class="block text-lg font-medium text-gray-300">Nombre del cliente:</label>
+                <input type="text" id="nombre" required
+                    class="w-full p-3 mt-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm">
+            </div>
+
+            <div class="mb-6">
+                <label for="email" class="block text-lg font-medium text-gray-300">Email del cliente:</label>
+                <input type="email" id="email" required
+                    class="w-full p-3 mt-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm">
+            </div>
+            <div class="mb-6">
                 <label for="num-equipos" class="block text-lg font-medium text-gray-300">Cantidad de equipos a
                     alquilar:</label>
                 <input type="number" id="num-equipos" min="2" required
@@ -31,9 +42,9 @@
                 <label for="tipo-alquiler" class="block text-lg font-medium text-gray-300">Tipo de alquiler:</label>
                 <select id="tipo-alquiler" required
                     class="w-full p-3 mt-2 bg-gray-700 text-white border border-gray-600 rounded-md shadow-sm">
-                    <option value="dentro">Dentro del establecimiento</option>
+                    <option value="ciudad">Dentro de la ciudad</option>
                     <option value="fuera">Fuera de la ciudad</option>
-                    <option value="local">Dentro del local</option>
+                    <option value="establecimiento">Dentro del establecimiento (local)</option>
                 </select>
             </div>
 

@@ -2,22 +2,32 @@ document.getElementById('factura-form').addEventListener('submit', manejarFormul
 
 function manejarFormulario(e) {
     e.preventDefault();
+    ocultarError();
     
     const datosFormulario = obtenerDatosFormulario();
-    if (validarFormulario(datosFormulario)) {
-        const total = calcularTotal(datosFormulario);
-        mostrarResultado(total, datosFormulario.tipoAlquiler, datosFormulario.numEquipos, datosFormulario.diasIniciales, datosFormulario.diasAdicionales);
+    if (!validarFormulario(datosFormulario)) {
+        return;
     }
+
+    const cliente = obtenerORegistrarCliente(datosFormulario.nombre, datosFormulario.email);
+    const calculo = calcularFactura(datosFormulario);
+
+    persistirAlquiler(cliente.idCliente, datosFormulario, calculo);
+    mostrarResultado(cliente, datosFormulario, calculo);
 }
 
 // Datos del formulario
 function obtenerDatosFormulario() {
+    const nombre = (document.getElementById('nombre')?.value || '').trim();
+    const email = (document.getElementById('email')?.value || '').trim();
     const numEquipos = parseInt(document.getElementById('num-equipos').value);
-    const tipoAlquiler = document.getElementById('tipo-alquiler').value;
+    const tipoAlquiler = document.getElementById('tipo-alquiler').value; // 'ciudad' | 'fuera' | 'establecimiento'
     const diasIniciales = parseInt(document.getElementById('dias-iniciales').value);
     const diasAdicionales = parseInt(document.getElementById('dias-adicionales').value) || 0;
 
     return {
+        nombre,
+        email,
         numEquipos,
         tipoAlquiler,
         diasIniciales,
@@ -25,92 +35,177 @@ function obtenerDatosFormulario() {
     };
 }
 
-
 function validarFormulario(datos) {
-    if (datos.numEquipos < 2) {
+    if (!datos.nombre) {
+        mostrarError("Ingrese el nombre del cliente.");
+        return false;
+    }
+    if (!datos.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(datos.email)) {
+        mostrarError("Ingrese un email válido.");
+        return false;
+    }
+    if (Number.isNaN(datos.numEquipos) || datos.numEquipos < 2) {
         mostrarError("El número de equipos debe ser al menos 2.");
         return false;
     }
-    if (!validarEntrada(datos.diasIniciales, "diasIniciales") || !validarEntrada(datos.diasAdicionales, "diasAdicionales")) {
+    if (Number.isNaN(datos.diasIniciales) || datos.diasIniciales < 1) {
+        mostrarError("El número de días iniciales debe ser al menos 1.");
         return false;
     }
-    return true;
-}
-
-function validarEntrada(valor, tipo) {
-    if (tipo === "diasIniciales") {
-        if (valor < 1) {
-            mostrarError("El número de días iniciales debe ser al menos 1.");
-            return false;
-        }
-    }
-    if (tipo === "diasAdicionales" && valor < 0) {
+    if (Number.isNaN(datos.diasAdicionales) || datos.diasAdicionales < 0) {
         mostrarError("El número de días adicionales no puede ser negativo.");
         return false;
     }
+    if (!['ciudad','fuera','establecimiento'].includes(datos.tipoAlquiler)) {
+        mostrarError("Seleccione una opción de alquiler válida.");
+        return false;
+    }
     return true;
 }
 
-//mensajes de error
+// mensajes de error
 function mostrarError(mensaje) {
     const errorDiv = document.getElementById('error-mensaje');
     errorDiv.textContent = mensaje;
     errorDiv.classList.remove('hidden');
 }
+function ocultarError() {
+    const errorDiv = document.getElementById('error-mensaje');
+    errorDiv.textContent = '';
+    errorDiv.classList.add('hidden');
+}
 
-// Total de la factura
-function calcularTotal(datos) {
-    const tarifaPorDia = 35000;
-    let incremento = 0;
-    let descuento = 0;
+// Cliente y persistencia
+function obtenerORegistrarCliente(nombre, email) {
+    const clave = 'alquipc_clientes';
+    const clientes = JSON.parse(localStorage.getItem(clave) || '[]');
+    const existente = clientes.find(c => c.email.toLowerCase() === email.toLowerCase());
+    if (existente) {
+        return existente;
+    }
+    const idCliente = generarIdCliente(nombre);
+    const nuevo = { idCliente, nombre, email };
+    clientes.push(nuevo);
+    localStorage.setItem(clave, JSON.stringify(clientes));
+    return nuevo;
+}
 
+function generarIdCliente(nombre) {
+    const base = nombre.replace(/\s+/g, '').slice(0, 4).toUpperCase();
+    const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const ts = Date.now().toString().slice(-4);
+    return `CLI-${base}-${rand}${ts}`;
+}
+
+function persistirAlquiler(idCliente, datos, calculo) {
+    const clave = 'alquipc_alquileres';
+    const alquileres = JSON.parse(localStorage.getItem(clave) || '[]');
+    const registro = {
+        idCliente,
+        fecha: new Date().toISOString(),
+        ...datos,
+        calculo
+    };
+    alquileres.push(registro);
+    localStorage.setItem(clave, JSON.stringify(alquileres));
+}
+
+// Cálculo de factura con desglose y regla mejorada
+function calcularFactura(datos) {
+    const TARIFA_POR_DIA = 35000;
+
+    const subtotalInicial = datos.numEquipos * TARIFA_POR_DIA * datos.diasIniciales;
+
+    // Incrementos/Descuentos por tipo
+    let porcentajeIncremento = 0;
+    let porcentajeDescuento = 0;
     if (datos.tipoAlquiler === 'fuera') {
-        incremento = 0.05;
-    } else if (datos.tipoAlquiler === 'dentro') {
-        descuento = 0.05; 
+        porcentajeIncremento = 0.05; // +5%
+    } else if (datos.tipoAlquiler === 'establecimiento') {
+        porcentajeDescuento = 0.05; // -5%
     }
 
-    let total = datos.numEquipos * tarifaPorDia * datos.diasIniciales;
+    const valorIncremento = subtotalInicial * porcentajeIncremento;
+    const valorDescuento = subtotalInicial * porcentajeDescuento;
+    const subtotalTipo = subtotalInicial + valorIncremento - valorDescuento;
 
-    // aplicar incremento/descuento
-    total += total * incremento;
-    total -= total * descuento;
+    // Días adicionales con mejora de regla para no quebrar:
+    // 2% de descuento sobre el valor de días adicionales, con tope máximo de 20%
+    // y además nunca se descuenta más que el 50% del subtotal de adicionales
+    const subtotalAdicionales = datos.numEquipos * TARIFA_POR_DIA * (datos.diasAdicionales || 0);
+    const porcentajeDescAdicionalBase = 0.02 * (datos.diasAdicionales || 0);
+    const porcentajeDescAdicional = Math.min(porcentajeDescAdicionalBase, 0.20);
+    const descuentoAdicionalTeorico = subtotalAdicionales * porcentajeDescAdicional;
+    const descuentoAdicionalMaximo = subtotalAdicionales * 0.5;
+    const valorDescAdicional = Math.min(descuentoAdicionalTeorico, descuentoAdicionalMaximo);
+    const totalAdicionales = subtotalAdicionales - valorDescAdicional;
 
-    // Calcular días adicionales
-    if (datos.diasAdicionales > 0) {
-        const descuentoAdicional = 0.02; // 2% de descuento por cada día adicional
-        const totalAdicional = datos.numEquipos * tarifaPorDia * datos.diasAdicionales;
-        total += totalAdicional - totalAdicional * descuentoAdicional;
-    }
+    const total = subtotalTipo + totalAdicionales;
 
-    return total;
+    return {
+        tarifaPorDia: TARIFA_POR_DIA,
+        subtotalInicial,
+        porcentajeIncremento,
+        valorIncremento,
+        porcentajeDescuento,
+        valorDescuento,
+        subtotalTipo,
+        diasAdicionales: datos.diasAdicionales || 0,
+        subtotalAdicionales,
+        porcentajeDescAdicional,
+        valorDescAdicional,
+        totalAdicionales,
+        total
+    };
 }
 
 // resultado final
-function mostrarResultado(total, tipoAlquiler, numEquipos, diasIniciales, diasAdicionales) {
+function mostrarResultado(cliente, datos, calculo) {
     const resultadoDiv = document.getElementById('resultado');
     const detalle = document.getElementById('detalle');
 
+    const etiquetaTipo = datos.tipoAlquiler === 'ciudad'
+        ? 'Dentro de la ciudad'
+        : datos.tipoAlquiler === 'fuera'
+            ? 'Fuera de la ciudad'
+            : 'Dentro del establecimiento';
+
     let mensaje = `
-        <strong>Tipo de Alquiler:</strong> ${tipoAlquiler}<br>
-        <strong>Cantidad de equipos:</strong> ${numEquipos}<br>
-        <strong>Días iniciales:</strong> ${diasIniciales}<br>
-        <strong>Días adicionales:</strong> ${diasAdicionales}<br>
+        <strong>Id-Cliente:</strong> ${cliente.idCliente}<br>
+        <strong>Cliente:</strong> ${cliente.nombre} (${cliente.email})<br>
+        <strong>Opción de alquiler:</strong> ${etiquetaTipo}<br>
+        <strong>Cantidad de equipos:</strong> ${datos.numEquipos}<br>
+        <strong>Días iniciales:</strong> ${datos.diasIniciales}<br>
+        <strong>Días adicionales:</strong> ${calculo.diasAdicionales}<br>
+        <hr class="my-3 border-gray-600">
+        <strong>Tarifa por día:</strong> $${formatear(calculo.tarifaPorDia)}<br>
+        <strong>Subtotal inicial:</strong> $${formatear(calculo.subtotalInicial)}<br>
     `;
 
-    // detalles de incrementos/descuentos
-    if (tipoAlquiler === 'fuera') {
-        mensaje += `<strong>Incremento por fuera de la ciudad:</strong> +$${(total * 0.05).toFixed(2)}<br>`;
-    } else if (tipoAlquiler === 'dentro') {
-        mensaje += `<strong>Descuento por dentro del establecimiento:</strong> -$${(total * 0.05).toFixed(2)}<br>`;
+    if (calculo.porcentajeIncremento > 0) {
+        mensaje += `<strong>Incremento (servicio domicilio 5%):</strong> +$${formatear(calculo.valorIncremento)}<br>`;
+    }
+    if (calculo.porcentajeDescuento > 0) {
+        mensaje += `<strong>Descuento (establecimiento 5%):</strong> -$${formatear(calculo.valorDescuento)}<br>`;
     }
 
-    if (diasAdicionales > 0) {
-        mensaje += `<strong>Total por días adicionales:</strong> $${(total - total * 0.02).toFixed(2)}<br>`;
+    mensaje += `<strong>Subtotal tras opción:</strong> $${formatear(calculo.subtotalTipo)}<br>`;
+
+    if (calculo.diasAdicionales > 0) {
+        mensaje += `
+            <strong>Subtotal días adicionales:</strong> $${formatear(calculo.subtotalAdicionales)}<br>
+            <strong>Descuento días adicionales (${(calculo.porcentajeDescAdicional*100).toFixed(0)}%):</strong> -$${formatear(calculo.valorDescAdicional)}<br>
+            <strong>Total días adicionales:</strong> $${formatear(calculo.totalAdicionales)}<br>
+        `;
     }
 
-    mensaje += `<strong>Total a Pagar:</strong> $${total.toFixed(2)}`;
+    mensaje += `<hr class="my-3 border-gray-600">`;
+    mensaje += `<strong>Total a pagar:</strong> $${formatear(calculo.total)}`;
 
     detalle.innerHTML = mensaje;
     resultadoDiv.classList.remove('hidden');
+}
+
+function formatear(valor) {
+    return valor.toLocaleString('es-CO', { minimumFractionDigits: 0 });
 }
